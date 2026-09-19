@@ -81,12 +81,77 @@
   }
 }
 
-/* Grid background overlay */
+/* Premium and Cute Ambient Background */
 .grid-bg {
+  position: relative;
+  background-color: #0b0f19;
   background-image:
-    linear-gradient(rgba(0,229,160,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,229,160,0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
+    /* Cute & Soft Ambient Pastel Glows */
+    radial-gradient(ellipse 700px 500px at 12% 15%, rgba(52, 211, 153, 0.13), transparent 70%),
+    radial-gradient(ellipse 650px 500px at 88% 18%, rgba(192, 132, 252, 0.15), transparent 70%),
+    radial-gradient(ellipse 750px 450px at 50% 88%, rgba(56, 189, 248, 0.13), transparent 70%),
+    radial-gradient(circle 400px at 82% 78%, rgba(244, 114, 182, 0.09), transparent 70%),
+    /* Cute Delicate Tech Polka Dot Matrix */
+    radial-gradient(circle, rgba(255, 255, 255, 0.08) 1.2px, transparent 1.2px),
+    /* Soft ambient micro-grid */
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size:
+    auto,
+    auto,
+    auto,
+    auto,
+    26px 26px,
+    52px 52px,
+    52px 52px;
+  background-attachment: fixed;
+  overflow-x: hidden;
+}
+
+.grid-bg::before,
+.grid-bg::after {
+  content: "";
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(100px);
+  z-index: 0;
+  opacity: 0.65;
+}
+
+.grid-bg::before {
+  top: -5%;
+  left: 15%;
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.22), rgba(52, 211, 153, 0.14), transparent 70%);
+  animation: cute-float-1 20s ease-in-out infinite alternate;
+}
+
+.grid-bg::after {
+  bottom: 0%;
+  right: 10%;
+  width: 580px;
+  height: 580px;
+  background: radial-gradient(circle, rgba(244, 114, 182, 0.16), rgba(56, 189, 248, 0.16), transparent 70%);
+  animation: cute-float-2 24s ease-in-out infinite alternate;
+}
+
+.grid-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes cute-float-1 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(50px, 40px) scale(1.08); }
+  100% { transform: translate(-30px, 60px) scale(0.95); }
+}
+
+@keyframes cute-float-2 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-60px, -40px) scale(1.1); }
+  100% { transform: translate(40px, -50px) scale(0.93); }
 }
 
 /* Animated pulse glow */
@@ -116,8 +181,9 @@
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: hsl(222 47% 8%); }
-::-webkit-scrollbar-thumb { background: hsl(217 30% 25%); border-radius: 3px; }
+::-webkit-scrollbar-track { background: #0b0f19; }
+::-webkit-scrollbar-thumb { background: rgba(167, 139, 250, 0.25); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(167, 139, 250, 0.45); }
 
 /* Leaflet overrides */
 .leaflet-container {
