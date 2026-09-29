@@ -1,5 +1,12 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+﻿import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { BinData, TruckData, generateDemoBins, generateDemoTrucks } from "./smartbin-data";
+import {
+  FirebaseConfig,
+  loadSavedFirebaseConfig,
+  saveFirebaseConfig,
+  subscribeToBins,
+  saveBinToFirebase,
+} from "./firebase";
 
 export type AppMode = "live" | "manual" | "demo";
 
@@ -14,6 +21,7 @@ interface AppState {
   trucks: TruckData[];
   manualEntries: BinData[];
   classificationEvents: { id: string; bin_id: string; class: string; confidence: number; time: string; zone: string }[];
+  firebaseConfig: FirebaseConfig | null;
 }
 
 interface AppContextType extends AppState {
@@ -26,15 +34,34 @@ interface AppContextType extends AppState {
   deleteManualEntry: (binId: string) => void;
   dispatchTruck: (truckId: string, binId: string) => void;
   addClassificationEvent: (evt: AppState["classificationEvents"][0]) => void;
+  setFirebaseConfig: (cfg: FirebaseConfig) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [state, setAppState] = useState<AppState>({
-    isLoggedIn: false, mode: null, userName: "", employeeId: "",
-    state: "Maharashtra", city: "Mumbai", bins: [], trucks: [],
-    manualEntries: [], classificationEvents: [],
+  const [state, setAppState] = useState<AppState>(() => {
+    let savedManual: BinData[] = [];
+    try {
+      const raw = localStorage.getItem("smartbin_manual_entries");
+      if (raw) savedManual = JSON.parse(raw);
+    } catch {
+      // Ignore read errors
+    }
+    const savedFb = loadSavedFirebaseConfig();
+    return {
+      isLoggedIn: false,
+      mode: null,
+      userName: "",
+      employeeId: "",
+      state: "Maharashtra",
+      city: "Mumbai",
+      bins: [],
+      trucks: [],
+      manualEntries: savedManual,
+      classificationEvents: [],
+      firebaseConfig: savedFb,
+    };
   });
 
   const login = useCallback((name: string, empId: string, st: string, city: string) => {
@@ -43,6 +70,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => {
     setAppState(s => ({ ...s, isLoggedIn: false, mode: null, userName: "", employeeId: "", bins: [], trucks: [], classificationEvents: [] }));
+  }, []);
+
+  const setFirebaseConfig = useCallback((cfg: FirebaseConfig) => {
+    saveFirebaseConfig(cfg);
+    setAppState(s => ({ ...s, firebaseConfig: cfg }));
   }, []);
 
   const setMode = useCallback((mode: AppMode) => {
@@ -69,6 +101,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setAppState(s => {
       const entries = [...s.manualEntries, entry];
       localStorage.setItem("smartbin_manual_entries", JSON.stringify(entries));
+      if (s.mode === "live" && s.firebaseConfig) {
+        saveBinToFirebase(s.firebaseConfig, entry);
+      }
       const bins = s.mode === "manual" ? entries.filter(b => b.city === s.city) : s.bins;
       return { ...s, manualEntries: entries, bins };
     });
@@ -94,10 +129,35 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setAppState(s => ({ ...s, classificationEvents: [evt, ...s.classificationEvents].slice(0, 50) }));
   }, []);
 
+  useEffect(() => {
+    if (state.mode !== "live" || !state.firebaseConfig?.databaseURL) return;
+
+    const unsubscribe = subscribeToBins(
+      state.firebaseConfig,
+      (liveBins) => {
+        setAppState(s => {
+          if (s.mode !== "live") return s;
+          if (!liveBins || liveBins.length === 0) return s;
+          const filtered = s.city ? liveBins.filter(b => !b.city || b.city === s.city) : liveBins;
+          return {
+            ...s,
+            bins: filtered.length > 0 ? filtered : liveBins,
+          };
+        });
+      },
+      (err) => {
+        console.warn("Firebase live update error:", err);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [state.mode, state.firebaseConfig, state.city]);
+
   return (
     <AppContext.Provider value={{
       ...state, login, logout, setMode, setCity, setState: setSt,
       addManualEntry, deleteManualEntry, dispatchTruck, addClassificationEvent,
+      setFirebaseConfig,
     }}>
       {children}
     </AppContext.Provider>

@@ -3,11 +3,11 @@ import { motion } from "framer-motion";
 import { useApp } from "@/lib/smartbin-context";
 
 export default function ModeSelection() {
-  const { userName, state, city, setMode, logout } = useApp();
+  const { userName, state, city, setMode, logout, firebaseConfig, setFirebaseConfig } = useApp();
   const [selected, setSelected] = useState<string | null>(null);
-  const [firebaseUrl, setFirebaseUrl] = useState("");
-  const [dbPath, setDbPath] = useState("/bins/SB-MUM-001");
-  const [apiKey, setApiKey] = useState("");
+  const [firebaseUrl, setFirebaseUrl] = useState(firebaseConfig?.databaseURL || "");
+  const [dbPath, setDbPath] = useState(firebaseConfig?.dbPath || "/bins");
+  const [apiKey, setApiKey] = useState(firebaseConfig?.apiKey || "");
   const [showApiKey, setShowApiKey] = useState(false);
   const [connecting, setConnecting] = useState(false);
 
@@ -32,10 +32,17 @@ export default function ModeSelection() {
   const handleLaunch = (mode: string) => {
     if (mode === "live") {
       setConnecting(true);
+      if (firebaseUrl.trim()) {
+        setFirebaseConfig({
+          databaseURL: firebaseUrl.trim(),
+          dbPath: dbPath.trim() || "/bins",
+          apiKey: apiKey.trim(),
+        });
+      }
       setTimeout(() => {
         setConnecting(false);
         setMode("live");
-      }, 2000);
+      }, 1500);
     } else if (mode === "manual") {
       setMode("manual");
     } else {
