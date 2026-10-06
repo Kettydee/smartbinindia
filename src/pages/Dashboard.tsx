@@ -203,15 +203,17 @@ function AIPerformanceRing({ bins }: { bins: BinData[] }) {
   return (
     <div className="bg-card border border-border rounded-xl p-5 flex flex-col items-center justify-center">
       <h3 className="text-sm font-bold text-foreground mb-4">AI Accuracy</h3>
-      <svg width="120" height="120" className="-rotate-90">
-        <circle cx="60" cy="60" r="45" fill="none" stroke="hsl(var(--border))" strokeWidth="8" />
-        <motion.circle cx="60" cy="60" r="45" fill="none" stroke="hsl(var(--sb-green))" strokeWidth="8"
-          strokeLinecap="round" strokeDasharray={circumference}
-          initial={{ strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset: dashOffset }}
-          transition={{ duration: 1.5, ease: "easeOut" }} />
-      </svg>
-      <p className="text-3xl font-bold font-mono text-foreground -mt-[76px] mb-8">{avgAccuracy}%</p>
+      <div className="relative w-[120px] h-[120px] flex items-center justify-center mb-3">
+        <svg width="120" height="120" className="-rotate-90 absolute inset-0">
+          <circle cx="60" cy="60" r="45" fill="none" stroke="hsl(var(--border))" strokeWidth="8" />
+          <motion.circle cx="60" cy="60" r="45" fill="none" stroke="hsl(var(--sb-green))" strokeWidth="8"
+            strokeLinecap="round" strokeDasharray={circumference}
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset: dashOffset }}
+            transition={{ duration: 1.5, ease: "easeOut" }} />
+        </svg>
+        <span className="text-xl font-bold font-mono text-foreground tracking-tight z-10">{avgAccuracy}%</span>
+      </div>
       <p className="text-xs text-muted-foreground">MobileNetV2 · INT8</p>
     </div>
   );
